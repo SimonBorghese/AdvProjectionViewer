@@ -6,14 +6,20 @@
 
 #include "Window.h"
 
-struct window_t APV_Create_Window(int Width, int Height) {
+struct window_t APV_Create_Window() {
     struct window_t newWindow;
+
+    newWindow.bIsFullscreen = 0;
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS)) {
         printf("Failed to Init SDL2!");
     }
 
-    newWindow.Window = SDL_CreateWindow("AdvProjectionViewer",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED, Width, Height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    // Fix me: Configure to allow multiple monitor setup and such
+    SDL_DisplayMode mode;
+    SDL_GetDesktopDisplayMode(0, &mode);
+
+    newWindow.Window = SDL_CreateWindow("AdvProjectionViewer",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED, mode.w, mode.h, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
@@ -24,7 +30,7 @@ struct window_t APV_Create_Window(int Width, int Height) {
 
     gladLoadGL((GLADloadfunc) SDL_GL_GetProcAddress);
 
-    glViewport(0,0,Width,Height);
+    glViewport(0,0,mode.w,mode.h);
 
     return newWindow;
 }
@@ -39,4 +45,14 @@ void APV_Destroy_Window(struct window_t window) {
     SDL_DestroyWindow(window.Window);
 
     SDL_Quit();
+}
+
+void APV_Toggle_Fullscreen(struct window_t window) {
+    if (!window.bIsFullscreen) {
+        SDL_SetWindowFullscreen(window.Window, SDL_WINDOW_FULLSCREEN);
+        window.bIsFullscreen = 1;
+    } else {
+        SDL_SetWindowFullscreen(window.Window, 0);
+        window.bIsFullscreen = 0;
+    }
 }

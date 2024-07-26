@@ -15,7 +15,7 @@ int main(int, char**) {
 #endif
     NDI_t ndi = APV_Create_NDI();
 
-    window_t window = APV_Create_Window(800,600);
+    window_t window = APV_Create_Window();
 
     render_t render = APV_Create_Render("shader.vert", "shader.frag");
 
@@ -31,12 +31,10 @@ int main(int, char**) {
 
     SDL_Event e;
     bool bShouldQuit = false;
+    bool bShowUI = true;
 
     uint32_t no_sources;
     const NDIlib_source_t *sources = APV_Find_Sources(ndi, &no_sources);
-
-
-
 
     while (!bShouldQuit) {
         while (APV_Pool_Events(&e)) {
@@ -45,6 +43,14 @@ int main(int, char**) {
                 case SDL_QUIT:
                     bShouldQuit = true;
                     break;
+                case SDL_KEYDOWN:
+                    switch (e.key.keysym.scancode) {
+                        case SDL_SCANCODE_SPACE:
+                            bShowUI = !bShowUI;
+                            break;
+                        default:
+                            break;
+                    }
                 default:
                     break;
             }
@@ -56,20 +62,26 @@ int main(int, char**) {
 
         {
 
-            ImGui::Begin("NDI Stream Selector");
+            if (bShowUI) {
+                ImGui::Begin("NDI Stream Selector", &bShowUI);
 
-            for (int n = 0; n < no_sources; n++) {
-                NDIlib_source_t source = sources[n];
+                for (int n = 0; n < no_sources; n++) {
+                    NDIlib_source_t source = sources[n];
 
-                if (ImGui::Button(source.p_ndi_name)) {
-                    NDIlib_recv_connect(ndi.ndiRecv, &source);
+                    if (ImGui::Button(source.p_ndi_name)) {
+                        NDIlib_recv_connect(ndi.ndiRecv, &source);
+                    }
                 }
-            }
 
-            if (ImGui::Button("Reload")) {
-                sources = APV_Find_Sources(ndi, &no_sources);
+                if (ImGui::Button("Reload")) {
+                    sources = APV_Find_Sources(ndi, &no_sources);
+                }
+
+                if (ImGui::Button("Fullscreen")) {
+                    APV_Toggle_Fullscreen(window);
+                }
+                ImGui::End();
             }
-            ImGui::End();
         }
 
         ImGui::Render();
